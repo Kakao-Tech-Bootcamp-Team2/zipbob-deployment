@@ -32,3 +32,6 @@ out/
 ### VS Code ###
 .vscode/
 bin/
+
+docker/mariadb/mariadb.env
+docker/rabbitmq/rabbitmq.conf

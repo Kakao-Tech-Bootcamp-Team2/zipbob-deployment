@@ -1,0 +1,3 @@
+CREATE DATABASE members;
+GRANT ALL PRIVILEGES ON members.* TO 'zipbob'@'%';
+FLUSH PRIVILEGES;
