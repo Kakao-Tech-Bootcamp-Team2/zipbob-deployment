@@ -1,0 +1,117 @@
+services:
+
+  # Applications
+  
+  zipbob-config-service:
+    platform: linux/amd64
+    image: "zipbob-config-service"
+    container_name: "zipbob-config-service"
+    ports:
+      - 8888:8888
+      - 9888:9888
+    healthcheck:
+      test: [ "CMD", "/workspace/health-check" ]
+      interval: 3s
+      retries: 10
+      timeout: 5s
+      start_period: 10s
+    environment:
+      - SPRING_PROFILES_ACTIVE=native
+      - BPL_JVM_THREAD_COUNT=50
+      - BPL_DEBUG_ENABLED=true
+      - BPL_DEBUG_PORT=9888
+      - NATIVE_LOCATION=/config
+      - THC_PORT=8888
+      - THC_PATH=/actuator/health
+    volumes:
+      - ../../native-config-repo:/config
+
+  zipbob-edge-service:
+    platform: linux/amd64
+    depends_on:
+      zipbob-config-service:
+        condition: service_healthy
+      zipbob-mariadb:
+        condition: service_started
+      zipbob-redis:
+        condition: service_started
+    image: "zipbob-edge-service"
+    container_name: "zipbob-edge-service"
+    ports:
+      - 9000:9000
+      - 8000:8000
+    environment:
+      - BPL_DEBUG_ENABLED=true
+      - BPL_DEBUG_PORT=8000
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://zipbob-mariadb:3306/members
+      - SPRING_DATA_REDIS_HOST=zipbob-redis
+      - SPRING_CLOUD_CONFIG_URI=http://zipbob-config-service:8888
+      - INGREDIENTS_MANAGE_SERVICE_URI=http://ingredients-manage-service:9001
+      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
+
+  ingredients-manage-service:
+    platform: linux/amd64
+    depends_on:
+      zipbob-config-service:
+        condition: service_healthy
+      zipbob-mariadb:
+        condition: service_started
+      zipbob-rabbitmq:
+        condition: service_started
+    image: "ingredients-manage-service"
+    container_name: "ingredients-manage-service"
+    ports:
+      - 9001:9001
+      - 8001:8001
+    environment:
+      - BPL_JVM_THREAD_COUNT=50
+      - BPL_DEBUG_ENABLED=true
+      - BPL_DEBUG_PORT=8001
+      - SPRING_CLOUD_CONFIG_URI=http://zipbob-config-service:8888
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://zipbob-mariadb:3306/members
+      - SPRING_RABBITMQ_HOST=zipbob-rabbitmq
+      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
+
+  recipe-review-service:
+    platform: linux/amd64
+    depends_on:
+      zipbob-config-service:
+        condition: service_healthy
+    image: "recipe-review-service"
+    container_name: "recipe-review-service"
+    ports:
+      - 9002:9002
+      - 8002:8002
+    environment:
+      - BPL_JVM_THREAD_COUNT=50
+      - BPL_DEBUG_ENABLED=true
+      - BPL_DEBUG_PORT=8001
+      - SPRING_CLOUD_CONFIG_URI=http://zipbob-config-service:8888
+      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
+
+  # Backing Services
+
+  zipbob-mariadb:
+    image: "mariadb:latest"
+    container_name: "zipbob-mariadb"
+    ports:
+      - 3306:3306
+    env_file:
+      - ./mariadb/mariadb.env
+    volumes:
+      - ./mariadb/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  zipbob-redis:
+    image: "redis:latest"
+    container_name: "zipbob-redis"
+    ports:
+      - 6379:6379
+
+  zipbob-rabbitmq:
+    image: rabbitmq:latest
+    container_name: zipbob-rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
