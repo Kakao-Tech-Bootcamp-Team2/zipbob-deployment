@@ -34,3 +34,20 @@ docker compose down
 
 ## 주의 사항
 - `/mariadb/mariadb.env`와 `/rabbitmq/rabbitmq.conf` 파일에는 사용자와 비밀번호 정보가 들어 있으므로 따로 commit하지 않았습니다.
+- 각 서비스 별로 deploy 브랜치에 있는 수정 사항을 반영해야 실행 가능합니다. 
+    - build.gradle에 다음과 같은 코드가 존재해야함
+        ```
+        bootBuildImage{
+            builder = "docker.io/paketobuildpacks/builder-jammy-base"
+            imageName = "zipbob-${project.name}"
+            environment = ["BP_JVM_VERSION" : "17.*"]
+
+            docker {
+                publishRegistry {
+                    url = project.findProperty("registryUrl")
+                    username = project.findProperty("registryUsername")
+                    password = project.findProperty("registryToken")
+                }
+            }
+        }
+        ```
