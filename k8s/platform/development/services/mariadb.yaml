@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zipbob-mariadb
+  labels:
+    db: zipbob-mariadb
+spec:
+  selector:
+    matchLabels:
+      db: zipbob-mariadb
+  template:
+    metadata:
+      labels:
+        db: zipbob-mariadb
+    spec:
+      containers:
+      - name: mariadb
+        image: mariadb:latest
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MARIADB_USER
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secrets
+              key: mariadb-user
+        - name: MARIADB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secrets
+              key: mariadb-password
+        - name: MARIADB_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mariadb-secrets
+              key: mariadb-root-password
+        volumeMounts:
+        - name: mariadb-initdb
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: mariadb-initdb
+        configMap:
+          name: mariadb-config
+          items:
+          - key: init.sql
+            path: init.sql
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipbob-mariadb
+  labels:
+    db: zipbob-mariadb
+spec:
+  selector:
+    db: zipbob-mariadb
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3306
+
