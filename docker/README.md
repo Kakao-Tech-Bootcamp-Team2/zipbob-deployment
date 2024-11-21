@@ -51,3 +51,5 @@ docker compose down
             }
         }
         ```
+- 현재 config-repo는 native 저장소를 사용하고 있습니다. docker-compose.yaml의 services.zipbob-config-service.volumes 정보를 자신의 로컬에 있는 native 저장소로 바꿔야 합니다.
+    - 예를 들어, 자신의 로컬에 있는 native 저장소 위치가 `/Users/covy/zipbob/native-config-repo` 라면, `../../native-config-repo:/config` 이 값을 `/Users/covy/zipbob/native-config-repo:/config`로 바꿔야 합니다.

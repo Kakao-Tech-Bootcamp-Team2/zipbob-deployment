@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: recipe-review-service-configmap
+data:
+  BPL_JVM_THREAD_COUNT: "50"
+  BPL_DEBUG_ENABLED: "true"
+  BPL_DEBUG_PORT: "8002"
+  SPRING_CLOUD_CONFIG_URI: "http://zipbob-config-service"
+  SPRING_CLOUD_CONFIG_FAIL_FAST: "true"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recipe-review-service
+  labels:
+    app: recipe-review-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: recipe-review-service
+  template:
+    metadata:
+      labels:
+        app: recipe-review-service
+    spec:
+      initContainers:
+      - name: init-zipbob-config-service
+        image: curlimages/curl
+        command: ['sh', '-c', 'until curl --fail http://zipbob-config-service/actuator/health; do echo waiting for zipbob-config-service; sleep 2; done']
+      containers:
+        - name: recipe-review-service
+          image: recipe-review-service
+          imagePullPolicy: IfNotPresent
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "sh", "-c", "sleep 5" ]
+          ports:
+            - containerPort: 9002
+            - containerPort: 8002
+          envFrom:
+          - configMapRef:
+              name: recipe-review-service-configmap
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "sh", "-c", "sleep 5" ]
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: recipe-review-service
+  labels:
+    app: recipe-review-service
+spec:
+  type: ClusterIP
+  selector:
+    app: recipe-review-service
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 9002
+    - name: debug
+      protocol: TCP
+      port: 8001
+      targetPort: 8002
