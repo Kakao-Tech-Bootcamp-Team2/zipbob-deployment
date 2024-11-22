@@ -4,6 +4,9 @@ services:
   
   zipbob-config-service:
     platform: linux/amd64
+    depends_on:
+      zipbob-rabbitmq:
+        condition: service_started
     image: "zipbob-config-service"
     container_name: "zipbob-config-service"
     ports:
@@ -15,6 +18,8 @@ services:
       retries: 10
       timeout: 5s
       start_period: 10s
+    env_file:
+      ./configservice/configservice.env
     environment:
       - SPRING_PROFILES_ACTIVE=native
       - BPL_JVM_THREAD_COUNT=50
@@ -23,6 +28,8 @@ services:
       - NATIVE_LOCATION=/config
       - THC_PORT=8888
       - THC_PATH=/actuator/health
+      - SPRING_RABBITMQ_HOST=zipbob-rabbitmq
+      - SPRING_RABBITMQ_PORT=5672
     volumes:
       - ../../native-config-repo:/config
 
@@ -34,6 +41,8 @@ services:
       zipbob-mariadb:
         condition: service_started
       zipbob-redis:
+        condition: service_started
+      zipbob-rabbitmq:
         condition: service_started
     image: "zipbob-edge-service"
     container_name: "zipbob-edge-service"
@@ -48,6 +57,7 @@ services:
       - SPRING_CLOUD_CONFIG_URI=http://zipbob-config-service:8888
       - INGREDIENTS_MANAGE_SERVICE_URI=http://ingredients-manage-service:9001
       - SPRING_CLOUD_CONFIG_FAIL_FAST=true
+      - SPRING_RABBITMQ_HOST=zipbob-rabbitmq
 
   ingredients-manage-service:
     platform: linux/amd64
