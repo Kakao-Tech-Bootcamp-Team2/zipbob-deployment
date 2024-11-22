@@ -54,10 +54,6 @@ spec:
           envFrom:
           - configMapRef:
               name: ingredients-manage-service-configmap
-          lifecycle:
-            preStop:
-              exec:
-                command: [ "sh", "-c", "sleep 5" ]
 
 ---
 
