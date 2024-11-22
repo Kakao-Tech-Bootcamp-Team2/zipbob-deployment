@@ -36,6 +36,7 @@ bin/
 ## Docker Compose
 docker/mariadb/mariadb.env
 docker/rabbitmq/rabbitmq.conf
+docker/mongodb/mongodb.env
 
 ## Kubernetes
 k8s/platform/development/services/config/**

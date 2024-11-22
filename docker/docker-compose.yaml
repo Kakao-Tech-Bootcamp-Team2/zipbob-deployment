@@ -115,3 +115,11 @@ services:
       - 15672:15672
     volumes:
       - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+
+  zipbob-mongodb:
+    image: mongo:latest
+    container_name: zipbob-mongodb
+    ports:
+      - 27017:27017
+    env_file:
+      - ./mongodb/mongodb.env

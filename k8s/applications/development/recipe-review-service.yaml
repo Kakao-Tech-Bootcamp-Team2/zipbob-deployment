@@ -31,6 +31,9 @@ spec:
       - name: init-zipbob-config-service
         image: curlimages/curl
         command: ['sh', '-c', 'until curl --fail http://zipbob-config-service/actuator/health; do echo waiting for zipbob-config-service; sleep 2; done']
+      - name: init-zipbob-mongodb
+        image: busybox:1.31
+        command: ['sh', '-c', 'until nc -z zipbob-mongodb 80; do echo waiting for zipbob-mongodb; sleep 2; done']
       containers:
         - name: recipe-review-service
           image: recipe-review-service
@@ -45,10 +48,6 @@ spec:
           envFrom:
           - configMapRef:
               name: recipe-review-service-configmap
-          lifecycle:
-            preStop:
-              exec:
-                command: [ "sh", "-c", "sleep 5" ]
 
 ---
 
