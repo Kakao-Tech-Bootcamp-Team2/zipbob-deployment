@@ -1,10 +1,12 @@
 services:
 
   # Applications
-  
+
   zipbob-config-service:
     platform: linux/amd64
     depends_on:
+      zipbob-vault:
+        condition: service_started
       zipbob-rabbitmq:
         condition: service_started
     image: "zipbob-config-service"
@@ -17,55 +19,51 @@ services:
       interval: 3s
       retries: 10
       timeout: 5s
-      start_period: 10s
+      start_period: 5s
     env_file:
-      ./configservice/configservice.env
+      ./common-config.env
     environment:
-      - SPRING_PROFILES_ACTIVE=native
-      - BPL_JVM_THREAD_COUNT=50
-      - BPL_DEBUG_ENABLED=true
       - BPL_DEBUG_PORT=9888
-      - NATIVE_LOCATION=/config
       - THC_PORT=8888
       - THC_PATH=/actuator/health
       - SPRING_RABBITMQ_HOST=zipbob-rabbitmq
       - SPRING_RABBITMQ_PORT=5672
-    volumes:
-      - ../../native-config-repo:/config
+      - SPRING_CLOUD_CONFIG_SERVER_VAULT_HOST=zipbob-vault
+      - SPRING_CLOUD_CONFIG_SERVER_VAULT_PORT=8200
+      - SPRING_CLOUD_VAULT_HOST=zipbob-vault
+      - SPRING_CLOUD_VAULT_PORT=8200
+      - SPRING_CLOUD_VAULT_URI=http://zipbob-vault:8200
 
   zipbob-edge-service:
     platform: linux/amd64
     depends_on:
-      zipbob-config-service:
-        condition: service_healthy
+      zipbob-vault:
+        condition: service_started
       zipbob-mariadb:
         condition: service_started
       zipbob-redis:
         condition: service_started
       zipbob-rabbitmq:
         condition: service_started
+      zipbob-config-service:
+        condition: service_healthy
     image: "zipbob-edge-service"
     container_name: "zipbob-edge-service"
     ports:
       - 9000:9000
       - 8000:8000
     environment:
-      - BPL_DEBUG_ENABLED=true
       - BPL_DEBUG_PORT=8000
-      - SPRING_DATASOURCE_URL=jdbc:mariadb://zipbob-mariadb:3306/members
-      - SPRING_DATA_REDIS_HOST=zipbob-redis
       - SPRING_CLOUD_CONFIG_URI=http://zipbob-config-service:8888
-      - INGREDIENTS_MANAGE_SERVICE_URI=http://ingredients-manage-service:9001
-      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
-      - SPRING_RABBITMQ_HOST=zipbob-rabbitmq
+      - SPRING_PROFILES_ACTIVE=prod
 
   ingredients-manage-service:
     platform: linux/amd64
     depends_on:
-      zipbob-config-service:
-        condition: service_healthy
       zipbob-mariadb:
         condition: service_started
+      zipbob-config-service:
+        condition: service_healthy
       zipbob-rabbitmq:
         condition: service_started
     image: "ingredients-manage-service"
@@ -74,30 +72,34 @@ services:
       - 9001:9001
       - 8001:8001
     environment:
-      - BPL_JVM_THREAD_COUNT=50
-      - BPL_DEBUG_ENABLED=true
       - BPL_DEBUG_PORT=8001
       - SPRING_CLOUD_CONFIG_URI=http://zipbob-config-service:8888
-      - SPRING_DATASOURCE_URL=jdbc:mariadb://zipbob-mariadb:3306/members
-      - SPRING_RABBITMQ_HOST=zipbob-rabbitmq
-      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
 
   recipe-review-service:
     platform: linux/amd64
     depends_on:
-      zipbob-config-service:
-        condition: service_healthy
+      zipbob-vault:
+        condition: service_started
+      zipbob-mongodb:
+        condition: service_started
+#      zipbob-rabbitmq:
+#        condition: service_started
+#      zipbob-config-service:
+#        condition: service_healthy
     image: "recipe-review-service"
     container_name: "recipe-review-service"
     ports:
       - 9002:9002
       - 8002:8002
+    env_file:
+      ./common-config.env
     environment:
-      - BPL_JVM_THREAD_COUNT=50
-      - BPL_DEBUG_ENABLED=true
-      - BPL_DEBUG_PORT=8001
-      - SPRING_CLOUD_CONFIG_URI=http://zipbob-config-service:8888
-      - SPRING_CLOUD_CONFIG_FAIL_FAST=true
+      - BPL_DEBUG_PORT=8002
+      - vault_host=zipbob-vault
+      - vault_port=8200
+      - SPRING_CLOUD_VAULT_KV_PROFILES=docker
 
   # Backing Services
 
@@ -133,3 +135,18 @@ services:
       - 27017:27017
     env_file:
       - ./mongodb/mongodb.env
+
+  zipbob-vault:
+    image: hashicorp/vault:latest
+    container_name: zipbob-vault
+    ports:
+      - "8200:8200"
+    volumes:
+      - ./vault/config:/vault/config
+      - ./vault/file:/vault/file
+      - ./logs/config:/vault/logs
+    environment:
+      - SKIP_CHOWN=true
+    cap_add:
+      - IPC_LOCK
+    entrypoint: vault server -config=/vault/config/local.json

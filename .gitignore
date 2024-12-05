@@ -37,7 +37,9 @@ bin/
 docker/mariadb/mariadb.env
 docker/rabbitmq/rabbitmq.conf
 docker/mongodb/mongodb.env
-docker/configservice/configservice.env
+docker/vault/file/
+docker/vault/logs/
+docker/common-config.env
 
 ## Kubernetes
 k8s/platform/development/services/config/**
