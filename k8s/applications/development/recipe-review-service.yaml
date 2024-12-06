@@ -3,11 +3,12 @@ kind: ConfigMap
 metadata:
   name: recipe-review-service-configmap
 data:
-  BPL_JVM_THREAD_COUNT: "50"
-  BPL_DEBUG_ENABLED: "true"
   BPL_DEBUG_PORT: "8002"
-  SPRING_CLOUD_CONFIG_URI: "http://zipbob-config-service"
-  SPRING_CLOUD_CONFIG_FAIL_FAST: "true"
+  vault_host: "zipbob-vault"
+  vault_port: "8200"
+  SPRING_CLOUD_VAULT_KV_PROFILES: "docker"
+#  SPRING_CLOUD_CONFIG_URI: "http://zipbob-config-service"
+#  SPRING_CLOUD_CONFIG_FAIL_FAST: "true"
 
 ---
 
@@ -28,12 +29,15 @@ spec:
         app: recipe-review-service
     spec:
       initContainers:
-      - name: init-zipbob-config-service
-        image: curlimages/curl
-        command: ['sh', '-c', 'until curl --fail http://zipbob-config-service/actuator/health; do echo waiting for zipbob-config-service; sleep 2; done']
+#      - name: init-zipbob-config-service
+#        image: curlimages/curl
+#        command: ['sh', '-c', 'until curl --fail http://zipbob-config-service/actuator/health; do echo waiting for zipbob-config-service; sleep 2; done']
+      - name: init-zipbob-vault
+        image: busybox:1.31
+        command: ['sh', '-c', 'until nc -z zipbob-vault 8200; do echo waiting for zipbob-vault; sleep 2; done']
       - name: init-zipbob-mongodb
         image: busybox:1.31
-        command: ['sh', '-c', 'until nc -z zipbob-mongodb 80; do echo waiting for zipbob-mongodb; sleep 2; done']
+        command: ['sh', '-c', 'until nc -z zipbob-mongodb 27017; do echo waiting for zipbob-mongodb; sleep 2; done']
       containers:
         - name: recipe-review-service
           image: recipe-review-service
@@ -48,6 +52,16 @@ spec:
           envFrom:
           - configMapRef:
               name: recipe-review-service-configmap
+          - configMapRef:
+              name: common-configmap
+          env:
+            - name: vault_token
+              valueFrom:
+                secretKeyRef:
+                  name: common-secret
+                  key: vault_token
+
+
 
 ---
 
@@ -64,7 +78,7 @@ spec:
   ports:
     - name: http
       protocol: TCP
-      port: 80
+      port: 9002
       targetPort: 9002
     - name: debug
       protocol: TCP

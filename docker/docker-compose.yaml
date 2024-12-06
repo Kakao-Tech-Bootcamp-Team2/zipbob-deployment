@@ -144,7 +144,7 @@ services:
     volumes:
       - ./vault/config:/vault/config
       - ./vault/file:/vault/file
-      - ./logs/config:/vault/logs
+      - ./vault/logs:/vault/logs
     environment:
       - SKIP_CHOWN=true
     cap_add:

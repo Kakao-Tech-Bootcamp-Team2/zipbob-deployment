@@ -46,7 +46,7 @@ spec:
   ports:
   - name: amqp
     protocol: TCP
-    port: 80
+    port: 5672
     targetPort: 5672
   - name: management
     protocol: TCP

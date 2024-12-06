@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: common-configmap
+data:
+  BPL_JVM_THREAD_COUNT: "50"
+  BPL_DEBUG_ENABLED: "true"

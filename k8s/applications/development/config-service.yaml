@@ -3,13 +3,16 @@ kind: ConfigMap
 metadata:
   name: zipbob-config-server-configmap
 data:
-  BPL_JVM_THREAD_COUNT: "50"
-  SPRING_PROFILES_ACTIVE: "native"
-  BPL_DEBUG_ENABLED: "true"
   BPL_DEBUG_PORT: "9888"
-  NATIVE_LOCATION: "/config"
   THC_PORT: "8888"
   THC_PATH: "/actuator/health"
+  SPRING_RABBITMQ_HOST: "zipbob-rabbitmq"
+  SPRING_RABBITMQ_PORT: "5672"
+  SPRING_CLOUD_CONFIG_SERVER_VAULT_HOST: "zipbob-vault"
+  SPRING_CLOUD_CONFIG_SERVER_VAULT_PORT: "8200"
+  SPRING_CLOUD_VAULT_HOST: "zipbob-vault"
+  SPRING_CLOUD_VAULT_PORT: "8200"
+  SPRING_CLOUD_VAULT_URI: "http://zipbob-vault:8200"
 
 ---
 
@@ -29,6 +32,13 @@ spec:
       labels:
         app: zipbob-config-service
     spec:
+      initContainers:
+        - name: init-zipbob-vault
+          image: busybox:1.31
+          command: ['sh', '-c', 'until nc -z zipbob-vault 8200; do echo waiting for zipbob-vault; sleep 2; done']
+        - name: init-zipbob-rabbitmq
+          image: busybox:1.31
+          command: [ 'sh', '-c', 'until nc -z zipbob-rabbitmq 5672; do echo waiting for zipbob-rabbitmq; sleep 2; done' ]
       containers:
       - name: zipbob-config-service
         image: zipbob-config-service
@@ -39,13 +49,18 @@ spec:
         envFrom:
         - configMapRef:
             name: zipbob-config-server-configmap
+        - configMapRef:
+            name: common-configmap
+        env:
+          - name: VAULT_TOKEN
+            valueFrom:
+              secretKeyRef:
+                name: common-secret
+                key: vault_token
         lifecycle:
           preStop:
             exec:
               command: [ "sh", "-c", "sleep 5" ]
-        volumeMounts:
-        - name: config-volume
-          mountPath: /config
         readinessProbe:
           exec:
             command:
@@ -54,12 +69,6 @@ spec:
           periodSeconds: 5
           timeoutSeconds: 5
           failureThreshold: 20
-      volumes:
-      - name: config-volume
-        hostPath:
-          # 개발환경의 Local native 저장소의 절대 경로 위치로 수정해야 합니다.
-          path: /Users/sindongseong/DsStudy/zipbob/native-config-repo
-          type: Directory
 
 
 ---
@@ -77,7 +86,7 @@ spec:
   ports:
     - name: http
       protocol: TCP
-      port: 80
+      port: 8888
       targetPort: 8888
     - name: debug
       protocol: TCP

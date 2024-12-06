@@ -6,6 +6,7 @@
 
 echo "\n📦 Deploying platform services's config..."
 kubectl apply -f ./platform/development/services/config
+kubectl apply -f ./applications/development/config
 sleep 3
 
 echo "\n📦 Deploying platform services..."
