@@ -3,14 +3,9 @@ kind: ConfigMap
 metadata:
   name: zipbob-edge-server-configmap
 data:
-  BPL_DEBUG_ENABLED: "true"
   BPL_DEBUG_PORT: "8000"
-  SPRING_DATASOURCE_URL: "jdbc:mariadb://zipbob-mariadb:80/members"
-  SPRING_DATA_REDIS_HOST: "zipbob-redis"
-  SPRING_DATA_REDIS_PORT: "80"
-  SPRING_CLOUD_CONFIG_URI: "http://zipbob-config-service"
-  INGREDIENTS_MANAGE_SERVICE_URI: "http://ingredients-manage-service"
-  SPRING_CLOUD_CONFIG_FAIL_FAST: "true"
+  SPRING_CLOUD_CONFIG_URI: "http://zipbob-config-service:8888"
+  SPRING_PROFILES_ACTIVE: "prod"
 
 ---
 
@@ -33,13 +28,16 @@ spec:
       initContainers:
       - name: init-zipbob-config-service
         image: curlimages/curl
-        command: ['sh', '-c', 'until curl --fail http://zipbob-config-service/actuator/health; do echo waiting for zipbob-config-service; sleep 2; done']
+        command: ['sh', '-c', 'until curl --fail http://zipbob-config-service:8888/actuator/health; do echo waiting for zipbob-config-service; sleep 2; done']
       - name: init-zipbob-mariadb
         image: busybox:1.31
-        command: ['sh', '-c', 'until nc -z zipbob-mariadb 80; do echo waiting for zipbob-mariadb; sleep 2; done']
+        command: ['sh', '-c', 'until nc -z zipbob-mariadb 3306; do echo waiting for zipbob-mariadb; sleep 2; done']
       - name: init-zipbob-redis
         image: busybox:1.31
-        command: ['sh', '-c', 'until nc -z zipbob-redis 80; do echo waiting for zipbob-redis; sleep 2; done']
+        command: ['sh', '-c', 'until nc -z zipbob-redis 6379; do echo waiting for zipbob-redis; sleep 2; done']
+      - name: init-zipbob-rabbitmq
+        image: busybox:1.31
+        command: ['sh', '-c', 'until nc -z zipbob-rabbitmq 5672; do echo waiting for zipbob-rabbitmq; sleep 2; done']
       containers:
         - name: zipbob-edge-service
           image: zipbob-edge-service
@@ -54,7 +52,8 @@ spec:
           envFrom:
           - configMapRef:
               name: zipbob-edge-server-configmap
-
+          - configMapRef:
+              name: common-configmap
 ---
 
 apiVersion: v1

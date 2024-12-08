@@ -3,14 +3,10 @@ kind: ConfigMap
 metadata:
   name: ingredients-manage-service-configmap
 data:
-  BPL_JVM_THREAD_COUNT: "50"
-  BPL_DEBUG_ENABLED: "true"
   BPL_DEBUG_PORT: "8001"
-  SPRING_CLOUD_CONFIG_URI: "http://zipbob-config-service"
-  SPRING_DATASOURCE_URL: "jdbc:mariadb://zipbob-mariadb:80/members"
-  SPRING_RABBITMQ_HOST: "zipbob-rabbitmq"
-  SPRING_RABBITMQ_PORT: "80"
-  SPRING_CLOUD_CONFIG_FAIL_FAST: "true"
+  SPRING_CLOUD_CONFIG_URI: "http://zipbob-config-service:8888"
+  SPRING_PROFILES_ACTIVE: "prod"
+  SPRING_JPA_HIBERNATE_DDL_AUTO: "update" #DB와 Storage 분리할 때까지
 
 ---
 
@@ -33,13 +29,13 @@ spec:
       initContainers:
       - name: init-zipbob-config-service
         image: curlimages/curl
-        command: ['sh', '-c', 'until curl --fail http://zipbob-config-service/actuator/health; do echo waiting for zipbob-config-service; sleep 2; done']
+        command: ['sh', '-c', 'until curl --fail http://zipbob-config-service:8888/actuator/health; do echo waiting for zipbob-config-service; sleep 2; done']
       - name: init-zipbob-mariadb
         image: busybox:1.31
-        command: ['sh', '-c', 'until nc -z zipbob-mariadb 80; do echo waiting for zipbob-mariadb; sleep 2; done']
+        command: ['sh', '-c', 'until nc -z zipbob-mariadb 3306; do echo waiting for zipbob-mariadb; sleep 2; done']
       - name: init-zipbob-rabbitmq
         image: busybox:1.31
-        command: ['sh', '-c', 'until nc -z zipbob-rabbitmq 80; do echo waiting for zipbob-rabbitmq; sleep 2; done']
+        command: ['sh', '-c', 'until nc -z zipbob-rabbitmq 5672; do echo waiting for zipbob-rabbitmq; sleep 2; done']
       containers:
         - name: ingredients-manage-service
           image: ingredients-manage-service
@@ -54,6 +50,8 @@ spec:
           envFrom:
           - configMapRef:
               name: ingredients-manage-service-configmap
+          - configMapRef:
+              name: common-configmap
 
 ---
 
@@ -70,7 +68,7 @@ spec:
   ports:
     - name: http
       protocol: TCP
-      port: 80
+      port: 9001
       targetPort: 9001
     - name: debug
       protocol: TCP

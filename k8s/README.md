@@ -1,7 +1,11 @@
 # kubernetes 환경에서 애플리케이션 실행하기
 
 ## 사전 준비 사항
-- 애플리케이션을 실행하기 위해 Kubernetes가 설치되어 있어야 합니다. 단일 노드 환경의 경우 Docker Desktop에서 제공하는 Kubernetes를 사용할 수 있습니다
+- 애플리케이션을 실행하기 위해 `Kubernetes`가 설치되어 있어야 합니다. 단일 노드 환경의 경우 Docker Desktop에서 제공하는 Kubernetes를 사용할 수 있습니다
+- 또한, `helm`도 설치되어 있어야 합니다. Mac에서는 다음과 같은 명령어로 설치할 수 있습니다.
+    ```
+    $ brew install helm
+    ```
 - kubernetes 컨텍스트를 확인합니다.
     ```
     # 현재 컨텍스트 확인
@@ -35,7 +39,7 @@ cd ./k8s
 ```
 
 3. ingress-nginx-controller 배포
-- 해당 작업은 오래 걸리기 때문에 지금 진행하며, `zipbob-start.sh`에는 포함하지 않았습니다.
+- 해당 작업은 오래 걸리기 때문에 먼저 진행하며, `zipbob-start.sh`에는 포함하지 않았습니다. (주석처리 하였음)
     - ingress-nginx-controller 배포
     ```
     $ kubectl apply -f ./platform/development/ingress
@@ -56,7 +60,7 @@ cd ./k8s
     ```
     # 해당 명령어 실행후 localhost:9001 로 접근
 
-    $ kubectl port-forward svc/ingredients-manage-service 9001:80
+    $ kubectl port-forward svc/ingredients-manage-service 9001:9001
     ```
 
 5. 애플리케이션 종료하기
@@ -66,21 +70,4 @@ cd ./k8s
     ```
 
 ## 주의 사항
-- `/k8s/platform/development/services/config`파일에는 DB의 user와 password 같은 민감한 정보가 들어있으므로 별도의 파일이 필요합니다.
-- 각 서비스 별로 build.gradle에 다음과 같은 코드가 존재한 후 클라우드 네이티브 빌드팩을 실행해야합니다.
-    ```
-    bootBuildImage{
-        builder = "docker.io/paketobuildpacks/builder-jammy-base"
-        imageName = "zipbob-${project.name}"
-        environment = ["BP_JVM_VERSION" : "17.*"]
-
-        docker {
-            publishRegistry {
-                url = project.findProperty("registryUrl")
-                username = project.findProperty("registryUsername")
-                password = project.findProperty("registryToken")
-            }
-        }
-    }
-    ```
-- 현재 config-repo는 native 저장소를 사용하고 있습니다. config-service.yaml의 spec.template.spec.volumes.hostPath.path의 정보를 자신의 로컬에 있는 native 저장소로 바꿔야 합니다.
+- DB 설정과 같은 `secret` 데이터는 `.gitignore`를 사용하여 GitHub에 업로드하지 않았습니다.

@@ -44,3 +44,5 @@ docker/common-config.env
 ## Kubernetes
 k8s/platform/development/services/config/**
 k8s/applications/development/config/common-secret.yaml
+k8s/platform/development/helm/vault/auto-unseal.yaml
+k8s/platform/development/helm/vault/vault/**

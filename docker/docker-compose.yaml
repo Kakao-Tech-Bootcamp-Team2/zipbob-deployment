@@ -120,7 +120,7 @@ services:
       - 6379:6379
 
   zipbob-rabbitmq:
-    image: rabbitmq:latest
+    image: rabbitmq:management
     container_name: zipbob-rabbitmq
     ports:
       - 5672:5672

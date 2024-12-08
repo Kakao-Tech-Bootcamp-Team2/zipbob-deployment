@@ -42,23 +42,4 @@ docker compose down
 ```
 
 ## 주의 사항
-- `/mariadb/mariadb.env`와 `/rabbitmq/rabbitmq.conf` 파일에는 사용자와 비밀번호 정보가 들어 있으므로 따로 commit하지 않았습니다.
-- 각 서비스 별로 deploy 브랜치에 있는 수정 사항을 반영해야 실행 가능합니다. 
-    - build.gradle에 다음과 같은 코드가 존재해야함
-        ```
-        bootBuildImage{
-            builder = "docker.io/paketobuildpacks/builder-jammy-base"
-            imageName = "zipbob-${project.name}"
-            environment = ["BP_JVM_VERSION" : "17.*"]
-
-            docker {
-                publishRegistry {
-                    url = project.findProperty("registryUrl")
-                    username = project.findProperty("registryUsername")
-                    password = project.findProperty("registryToken")
-                }
-            }
-        }
-        ```
-- 현재 config-repo는 native 저장소를 사용하고 있습니다. docker-compose.yaml의 services.zipbob-config-service.volumes 정보를 자신의 로컬에 있는 native 저장소로 바꿔야 합니다.
-    - 예를 들어, 자신의 로컬에 있는 native 저장소 위치가 `/Users/covy/zipbob/native-config-repo` 라면, `../../native-config-repo:/config` 이 값을 `/Users/covy/zipbob/native-config-repo:/config`로 바꿔야 합니다.
+- DB 설정과 같은 `secret` 데이터는 `.gitignore`를 사용하여 GitHub에 업로드하지 않았습니다.
