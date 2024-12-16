@@ -14,12 +14,6 @@ services:
     ports:
       - 8888:8888
       - 9888:9888
-    healthcheck:
-      test: [ "CMD", "/workspace/health-check" ]
-      interval: 3s
-      retries: 10
-      timeout: 5s
-      start_period: 5s
     env_file:
       ./common-config.env
     environment:
@@ -34,6 +28,13 @@ services:
       - SPRING_CLOUD_VAULT_PORT=8200
       - SPRING_CLOUD_VAULT_URI=http://zipbob-vault:8200
 
+  config-service-healthcheck:
+    image: curlimages/curl
+    depends_on:
+      - zipbob-config-service
+    command: sh -c "until curl --fail http://zipbob-config-service:8888/actuator/health; do echo waiting for zipbob-config-service; sleep 2; done"
+    restart: on-failure
+
   zipbob-edge-service:
     platform: linux/amd64
     depends_on:
@@ -45,8 +46,8 @@ services:
         condition: service_started
       zipbob-rabbitmq:
         condition: service_started
-      zipbob-config-service:
-        condition: service_healthy
+      config-service-healthcheck:
+        condition: service_completed_successfully
     image: "zipbob-edge-service"
     container_name: "zipbob-edge-service"
     ports:
@@ -60,10 +61,10 @@ services:
   ingredients-manage-service:
     platform: linux/amd64
     depends_on:
+      config-service-healthcheck:
+        condition: service_completed_successfully
       zipbob-mariadb:
         condition: service_started
-      zipbob-config-service:
-        condition: service_healthy
       zipbob-rabbitmq:
         condition: service_started
     image: "ingredients-manage-service"

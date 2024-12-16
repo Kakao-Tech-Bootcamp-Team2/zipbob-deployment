@@ -33,6 +33,9 @@ out/
 .vscode/
 bin/
 
+### MacOS ###
+.DS_Store
+
 ## Docker Compose
 docker/mariadb/mariadb.env
 docker/rabbitmq/rabbitmq.conf
