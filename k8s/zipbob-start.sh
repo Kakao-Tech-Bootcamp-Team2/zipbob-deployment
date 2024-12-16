@@ -4,7 +4,7 @@
 # kubectl apply -f ./platform/development/ingress
 # sleep 15
 
-CHART_DIR="./platform/development/helm/vault"
+CHART_DIR="./platform/development/helm/vault/vault"
 if [ ! -d "$CHART_DIR" ]; then
   echo "\n📦Pulling and unpacking Vault Helm chart..."
   helm pull hashicorp/vault --untar --untardir $CHART_DIR

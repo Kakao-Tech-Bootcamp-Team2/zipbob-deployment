@@ -12,10 +12,10 @@ server:
   volumes:
     - name: file
       hostPath:
-        path: /Users/sindongseong/DsStudy/zipbob/zipbob-deployment/docker/vault/file
+        path: /Users/covy/Study/TeamProject/ZipBob/zipbob-deployment/docker/vault/file
     - name: logs
       hostPath:
-        path: /Users/sindongseong/DsStudy/zipbob/zipbob-deployment/docker/vault/logs
+        path: /Users/covy/Study/TeamProject/ZipBob/zipbob-deployment/docker/vault/logs
   volumeMounts:
     - name: file
       mountPath: /vault/file

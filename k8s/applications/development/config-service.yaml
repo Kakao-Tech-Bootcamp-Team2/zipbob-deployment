@@ -38,38 +38,29 @@ spec:
           command: ['sh', '-c', 'until nc -z zipbob-vault 8200; do echo waiting for zipbob-vault; sleep 2; done']
         - name: init-zipbob-rabbitmq
           image: busybox:1.31
-          command: [ 'sh', '-c', 'until nc -z zipbob-rabbitmq 5672; do echo waiting for zipbob-rabbitmq; sleep 2; done' ]
+          command: ['sh', '-c', 'until nc -z zipbob-rabbitmq 5672; do echo waiting for zipbob-rabbitmq; sleep 2; done']
       containers:
-      - name: zipbob-config-service
-        image: zipbob-config-service
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 8888
-        - containerPort: 9888
-        envFrom:
-        - configMapRef:
-            name: zipbob-config-server-configmap
-        - configMapRef:
-            name: common-configmap
-        env:
-          - name: VAULT_TOKEN
-            valueFrom:
-              secretKeyRef:
-                name: common-secret
-                key: vault_token
-        lifecycle:
-          preStop:
-            exec:
-              command: [ "sh", "-c", "sleep 5" ]
-        readinessProbe:
-          exec:
-            command:
-              - /workspace/health-check
-          initialDelaySeconds: 10
-          periodSeconds: 5
-          timeoutSeconds: 5
-          failureThreshold: 20
-
+        - name: zipbob-config-service
+          image: zipbob-config-service
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8888
+            - containerPort: 9888
+          envFrom:
+            - configMapRef:
+                name: zipbob-config-server-configmap
+            - configMapRef:
+                name: common-configmap
+          env:
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: common-secret
+                  key: vault_token
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 5"]
 
 ---
 
@@ -92,5 +83,3 @@ spec:
       protocol: TCP
       port: 9888
       targetPort: 9888
-
-
