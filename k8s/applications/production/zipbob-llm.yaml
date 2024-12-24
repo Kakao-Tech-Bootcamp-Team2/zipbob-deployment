@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zipbob-llm
+  labels:
+    app: zipbob-llm
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: zipbob-llm
+  template:
+    metadata:
+      labels:
+        app: zipbob-llm
+    spec:
+      initContainers:
+      - name: init-zipbob-rabbitmq
+        image: busybox:1.31
+        command: ['sh', '-c', 'until nc -z rabbitmq.rabbitmq.svc.cluster.local 5672; do echo waiting for zipbob-rabbitmq; sleep 2; done']
+      containers:
+        - name: zipbob-llm
+          image: 905418374604.dkr.ecr.ap-northeast-2.amazonaws.com/zipbob-llm:0.0.6
+          imagePullPolicy: IfNotPresent
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "sh", "-c", "sleep 5" ]
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: zipbob-llm-config
+            - secretRef:
+                name: zipbob-llm-secret
+          resources:
+            requests:
+              memory: "100Mi"    
+              cpu: "100m"     
+
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipbob-llm
+  labels:
+    app: zipbob-llm
+spec:
+  type: LoadBalancer
+  selector:
+    app: zipbob-llm
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8000
+

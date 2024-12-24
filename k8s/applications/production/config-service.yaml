@@ -1,0 +1,109 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zipbob-config-server-configmap
+data:
+  BPL_DEBUG_PORT: "9888"
+  SPRING_RABBITMQ_HOST: "rabbitmq.rabbitmq.svc.cluster.local"
+  SPRING_RABBITMQ_PORT: "5672"
+  SPRING_CLOUD_CONFIG_SERVER_VAULT_HOST: "zipbob-vault"
+  SPRING_CLOUD_CONFIG_SERVER_VAULT_PORT: "8200"
+  SPRING_CLOUD_VAULT_HOST: "zipbob-vault"
+  SPRING_CLOUD_VAULT_PORT: "8200"
+  SPRING_CLOUD_VAULT_URI: "http://zipbob-vault:8200"
+  SPRING_CLOUD_VAULT_KV_PROFILES: "prod"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zipbob-config-service
+  labels:
+    app: zipbob-config-service
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: zipbob-config-service
+  template:
+    metadata:
+      labels:
+        app: zipbob-config-service
+    spec:
+      initContainers:
+        - name: init-zipbob-vault
+          image: busybox:1.31
+          command: ['sh', '-c', 'until nc -z zipbob-vault 8200; do echo waiting for zipbob-vault; sleep 2; done']
+        - name: init-zipbob-rabbitmq
+          image: busybox:1.31
+          command: ['sh', '-c', 'until nc -z rabbitmq.rabbitmq.svc.cluster.local 5672; do echo waiting for zipbob-rabbitmq; sleep 2; done']
+      containers:
+        - name: zipbob-config-service
+          image: 905418374604.dkr.ecr.ap-northeast-2.amazonaws.com/zipbob-config-service:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8888
+            - containerPort: 9888
+          envFrom:
+            - configMapRef:
+                name: zipbob-config-server-configmap
+            - configMapRef:
+                name: common-configmap
+          env:
+            - name: VAULT_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: common-secret
+                  key: vault_token
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sh", "-c", "sleep 5"]
+          resources:
+            requests:
+              memory: "100Mi"    
+              cpu: "100m"     
+              ephemeral-storage: "2Gi"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipbob-config-service
+  labels:
+    app: zipbob-config-service
+spec:
+  type: ClusterIP
+  selector:
+    app: zipbob-config-service
+  ports:
+    - name: http
+      protocol: TCP
+      port: 8888
+      targetPort: 8888
+    - name: debug
+      protocol: TCP
+      port: 9888
+      targetPort: 9888
+
+---
+
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: zipbob-config-service-vpa
+  namespace: default
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: zipbob-config-service
+  updatePolicy:
+    updateMode: "Off"

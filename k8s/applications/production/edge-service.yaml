@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: zipbob-edge-server-configmap
+data:
+  BPL_DEBUG_PORT: "8000"
+  SPRING_CLOUD_CONFIG_URI: "http://zipbob-config-service:8888"
+  SPRING_PROFILES_ACTIVE: "prod"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zipbob-edge-service
+  labels:
+    app: zipbob-edge-service
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: zipbob-edge-service
+  template:
+    metadata:
+      labels:
+        app: zipbob-edge-service
+    spec:
+      initContainers:
+      - name: init-zipbob-config-service
+        image: curlimages/curl
+        command: ['sh', '-c', 'until curl --fail http://zipbob-config-service:8888/actuator/health; do echo waiting for zipbob-config-service; sleep 2; done']
+      - name: init-zipbob-mariadb
+        image: busybox:1.31
+        command: ['sh', '-c', 'until nc -z mariadb-0.mariadb-service.mariadb.svc.cluster.local 3306; do echo waiting for mariadb; sleep 2; done']
+      - name: init-zipbob-redis
+        image: busybox:1.31
+        command: ['sh', '-c', 'until nc -z zipbob-redis 6379; do echo waiting for zipbob-redis; sleep 2; done']
+      - name: init-zipbob-rabbitmq
+        image: busybox:1.31
+        command: ['sh', '-c', 'until nc -z rabbitmq.rabbitmq.svc.cluster.local 5672; do echo waiting for zipbob-rabbitmq; sleep 2; done']
+      containers:
+        - name: zipbob-edge-service
+          image: jonum12312/zipbob-edge-service:0.1.4
+          imagePullPolicy: IfNotPresent
+          lifecycle:
+            preStop:
+              exec:
+                command: [ "sh", "-c", "sleep 5" ]
+          ports:
+            - containerPort: 9000
+            - containerPort: 8000
+          envFrom:
+          - configMapRef:
+              name: zipbob-edge-server-configmap
+          - configMapRef:
+              name: common-configmap
+          resources:
+            requests:
+              memory: "100Mi"    
+              cpu: "100m"     
+              ephemeral-storage: "2Gi"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: zipbob-edge-service
+  labels:
+    app: zipbob-edge-service
+spec:
+  type: ClusterIP
+  selector:
+    app: zipbob-edge-service
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 9000
+    - name: debug
+      protocol: TCP
+      port: 8000
+      targetPort: 8000
+
+---
+
+apiVersion: autoscaling.k8s.io/v1
+kind: VerticalPodAutoscaler
+metadata:
+  name: zipbob-edge-service-vpa
+  namespace: default
+spec:
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: zipbob-edge-service
+  updatePolicy:
+    updateMode: "Off"  # 추천(리포트)만 받고, 실제 적용은 하지 않음
+
