@@ -43,7 +43,7 @@ spec:
         command: ['sh', '-c', 'until nc -z rabbitmq.rabbitmq.svc.cluster.local 5672; do echo waiting for zipbob-rabbitmq; sleep 2; done']
       containers:
         - name: ingredients-manage-service
-          image: ghcr.io/kakao-tech-bootcamp-team2/ingredients-manage-service:9450b1f03313ec8c96f26b20ccd45c3a9b33879c
+          image: ghcr.io/kakao-tech-bootcamp-team2/ingredients-manage-service:bcc164f8fd5085d9bfdb90c34e637c61ad6165c7
           imagePullPolicy: Always
           lifecycle:
             preStop:
