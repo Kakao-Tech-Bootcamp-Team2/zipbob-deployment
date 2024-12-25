@@ -45,7 +45,7 @@ spec:
         command: ['sh', '-c', 'until nc -z rabbitmq.rabbitmq.svc.cluster.local 5672; do echo waiting for zipbob-rabbitmq; sleep 2; done']
       containers:
         - name: zipbob-edge-service
-          image: ghcr.io/kakao-tech-bootcamp-team2/zipbob-edge-service
+          image: ghcr.io/kakao-tech-bootcamp-team2/zipbob-edge-service:latest
           imagePullPolicy: Always
           lifecycle:
             preStop:
