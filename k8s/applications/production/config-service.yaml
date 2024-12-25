@@ -45,7 +45,7 @@ spec:
           command: ['sh', '-c', 'until nc -z rabbitmq.rabbitmq.svc.cluster.local 5672; do echo waiting for zipbob-rabbitmq; sleep 2; done']
       containers:
         - name: zipbob-config-service
-          image: ghcr.io/kakao-tech-bootcamp-team2/zipbob-config-service:latest
+          image: ghcr.io/kakao-tech-bootcamp-team2/zipbob-config-service:c3ee42006c41de1a1b849960da4767d0c53022cc
           imagePullPolicy: Always
           ports:
             - containerPort: 8888
