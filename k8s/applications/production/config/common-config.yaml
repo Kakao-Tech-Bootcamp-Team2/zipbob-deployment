@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: common-configmap
+data:
+  BPL_JVM_THREAD_COUNT: "250"
+  BPL_DEBUG_ENABLED: "true"
+  JAVA_TOOL_OPTIONS: "-Duser.timezone=Asia/Seoul"
