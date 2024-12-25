@@ -45,7 +45,7 @@ spec:
         command: ['sh', '-c', 'until nc -z mongodb-0.mongodb-service.mongodb.svc.cluster.local 27017; do echo waiting for mongodb-0; sleep 2; done']
       containers:
         - name: recipe-review-service
-          image: ghcr.io/kakao-tech-bootcamp-team2/recipe-review-service:73fcc8d359a5c550ca5ade2c02bd5f6c93b4664c
+          image: ghcr.io/kakao-tech-bootcamp-team2/recipe-review-service:c5c7afe778f58d6c23180da2e8c32543b3da9035
           imagePullPolicy: Always
           lifecycle:
             preStop:
