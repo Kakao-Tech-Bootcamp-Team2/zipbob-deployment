@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: zipbob
+  namespace: argocd
+spec:
+  description: ZipBob Project
+  
+  # 소스 레포지토리 허용 목록
+  sourceRepos:
+  - 'https://github.com/Kakao-Tech-Bootcamp-Team2/zipbob-deployment.git'
+  
+  # 배포 대상 허용 목록
+  destinations:
+  - namespace: default
+    server: https://kubernetes.default.svc
+  
+  # 클러스터 리소스 권한 설정
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'

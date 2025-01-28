@@ -1,0 +1,89 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: recipe-review-service
+  namespace: argocd
+spec:
+  project: zipbob
+  source:
+    repoURL: https://github.com/Kakao-Tech-Bootcamp-Team2/zipbob-deployment.git
+    targetRevision: HEAD
+    path: k8s/applications/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: edge-service
+  namespace: argocd
+spec:
+  project: zipbob
+  source:
+    repoURL: https://github.com/Kakao-Tech-Bootcamp-Team2/zipbob-deployment.git
+    targetRevision: HEAD
+    path: k8s/applications/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingredients-manage-service
+  namespace: argocd
+spec:
+  project: zipbob
+  source:
+    repoURL: https://github.com/Kakao-Tech-Bootcamp-Team2/zipbob-deployment.git
+    targetRevision: HEAD
+    path: k8s/applications/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
+
+---
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: config-service
+  namespace: argocd
+spec:
+  project: zipbob
+  source:
+    repoURL: https://github.com/Kakao-Tech-Bootcamp-Team2/zipbob-deployment.git
+    targetRevision: HEAD
+    path: k8s/applications/production
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+    - CreateNamespace=true
