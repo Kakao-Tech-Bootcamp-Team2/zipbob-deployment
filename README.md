@@ -19,8 +19,8 @@
 ZipBob 백엔드 서비스에서 쿠버네티스를 사용하여 개발 및 배포 환경을 구성하기 위한 설정 파일을 제공합니다. 크게 다음과 같은 세 가지 디렉토리로 구성되어 있습니다:
 
 - applications: 애플리케이션 개발 및 배포를 위한 쿠버네티스 매니페스트 파일
-- devops: ArgoCD, GitHub Actions 등 DevOps 도구 설정 파일
-- platform: Vault, RabbitMQ 등 애플리케이션 실행에 필요한 인프라 서비스 설정 파일
+- devops: ArgoCD, EFK, Prometheus 등 DevOps 도구 설정 파일
+- platform: Vault, RabbitMQ, MariaDB 등 애플리케이션 실행에 필요한 서비스 설정 파일
 
 개발 환경에서 쿠버네티스를 사용해 애플리케이션을 쉽게 실행하고 테스트할 수 있도록 스크립트를 제공합니다. 자세한 설정 방법과 사용법은 [k8s 디렉토리](https://github.com/Kakao-Tech-Bootcamp-Team2/zipbob-deployment/tree/main/k8s)에서 확인할 수 있습니다.
 
