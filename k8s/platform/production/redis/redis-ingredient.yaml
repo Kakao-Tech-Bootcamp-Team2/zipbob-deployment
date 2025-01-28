@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-ingredient
+  labels:
+    db: zipbob-redis
+spec:
+  selector:
+    matchLabels:
+      db: zipbob-redis
+  template:
+    metadata:
+      labels:
+        db: zipbob-redis
+    spec:
+      containers:
+        - name: redis-ingredient
+          image: redis:latest
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-ingredient
+  labels:
+    db: zipbob-redis
+spec:
+  type: ClusterIP
+  selector:
+    db: zipbob-redis
+  ports:
+  - protocol: TCP
+    port: 6379
+    targetPort: 6379
