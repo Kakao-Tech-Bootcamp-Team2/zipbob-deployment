@@ -49,3 +49,24 @@ k8s/platform/development/services/config/**
 k8s/applications/development/config/common-secret.yaml
 k8s/platform/development/helm/vault/auto-unseal.yaml
 k8s/platform/development/helm/vault/vault/**
+k8s/shell/
+k8s/platform/production/vault/vault/**
+k8s/platform/production/vault/auto-unseal.yaml
+k8s/platform/production/rabbitmq/rabbitmq/**
+k8s/platform/production/mariadb/mariadb-config.yaml
+k8s/devops/EFK/elasticsearch/**
+k8s/devops/EFK/kibana/**
+k8s/devops/EFK/fluentd/**
+k8s/devops/argocd/secret.sh
+k8s/devops/monitoring/kube-prometheus
+
+## Infra
+infra/kOps/id_rsa
+infra/kOps/id_rsa.pub
+infra/terraform/https/route53.tf
+
+# Terraform
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup
