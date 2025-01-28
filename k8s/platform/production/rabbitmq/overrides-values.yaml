@@ -1,0 +1,15 @@
+## Persistence parameters
+persistence:
+  enabled: true
+  storageClass: "ebs-gp3"  # PVC Storage Class for RabbitMQ data volume
+  accessModes:
+    - ReadWriteOnce
+  size: 28Gi
+  annotations: {}
+  labels: {}
+
+## Persistent Volume Claim Retention Policy
+persistentVolumeClaimRetentionPolicy:
+  enabled: true
+  whenScaled: Delete
+  whenDeleted: Delete
