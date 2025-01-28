@@ -1,0 +1,11 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-gp3  # EBS 스토리지 클래스 이름
+provisioner: ebs.csi.aws.com  # AWS EBS CSI 드라이버 프로비저너 
+parameters:
+  type: gp3  # EBS 볼륨 타입 (gp3는 범용 SSD)
+  encrypted: "true"  # 볼륨 암호화 활성화
+volumeBindingMode: WaitForFirstConsumer  # 파드가 스케줄링될 때까지 PVC 바인딩 대기
+reclaimPolicy: Delete  # PVC가 삭제될 때 볼륨도 함께 삭제
+allowVolumeExpansion: true  # 볼륨 크기 확장 허용
