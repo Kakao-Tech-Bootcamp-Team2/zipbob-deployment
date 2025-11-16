@@ -47,6 +47,8 @@ docker/common-config.env
 ## Kubernetes
 k8s/platform/development/services/config/**
 k8s/applications/development/config/common-secret.yaml
+k8s/applications/production/config/common-secret.yaml
+k8s/applications/production/config/zipbob-llm-config.yaml
 k8s/platform/development/helm/vault/auto-unseal.yaml
 k8s/platform/development/helm/vault/vault/**
 k8s/shell/
